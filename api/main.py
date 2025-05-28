@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # 配置API密钥和超时时间
-DEEPSEEK_API_KEY = "sk-cef9e2e275684e4592721df633f3ebae"
+DEEPSEEK_API_KEY = "xxx"
 DEEPSEEK_TIMEOUT = 120  # 设置120秒超时
 
 app = FastAPI()
