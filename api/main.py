@@ -9,6 +9,14 @@ from typing import Optional
 import logging
 from api.knowledge_base import SimpleKnowledgeBase, initialize_knowledge_base
 from lunar_python import Lunar, Solar
+from config import (
+    DEEPSEEK_API_KEY,
+    DEEPSEEK_MODEL,
+    DEEPSEEK_TIMEOUT,
+    DEEPSEEK_TEMPERATURE,
+    FRONTEND_PORT,
+    BAZI_ANALYSIS_PROMPT
+)
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -17,16 +25,12 @@ logger = logging.getLogger(__name__)
 # 加载环境变量
 load_dotenv()
 
-# 配置API密钥和超时时间
-DEEPSEEK_API_KEY = "xxx"
-DEEPSEEK_TIMEOUT = 120  # 设置120秒超时
-
 app = FastAPI()
 
 # 配置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8501", "http://127.0.0.1:8501"],  # Streamlit 默认端口
+    allow_origins=[f"http://localhost:{FRONTEND_PORT}", f"http://127.0.0.1:{FRONTEND_PORT}"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -158,30 +162,15 @@ async def analyze_bazi(birth_info: BirthInfo):
             raise HTTPException(status_code=500, detail="DeepSeek API key not configured")
         
         # 构建提示词
-        prompt = f"""
-        请基于以下信息进行命理分析：
-        
-        八字信息：
-        年柱：{bazi['year']}
-        月柱：{bazi['month']}
-        日柱：{bazi['day']}
-        时柱：{bazi['hour']}
-        
-        公历：{bazi['solar_date']}
-        农历：{bazi['lunar_date']}
-        
-        相关命理知识：
-        {knowledge}
-        
-        请提供详细的命理分析，包括：
-        1. 八字基本特征
-        2. 五行属性分析
-        3. 命局格局判断
-        4. 运势发展预测
-        5. 事业、财运、姻缘等方面的分析
-        
-        注意：分析要专业、客观，避免过于玄学或迷信的说法。
-        """
+        prompt = BAZI_ANALYSIS_PROMPT.format(
+            year=bazi['year'],
+            month=bazi['month'],
+            day=bazi['day'],
+            hour=bazi['hour'],
+            solar_date=bazi['solar_date'],
+            lunar_date=bazi['lunar_date'],
+            knowledge=knowledge
+        )
         
         try:
             logger.info("开始调用DeepSeek API...")
@@ -193,12 +182,11 @@ async def analyze_bazi(birth_info: BirthInfo):
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "deepseek-chat",
+                    "model": DEEPSEEK_MODEL,
                     "messages": [
                         {"role": "user", "content": prompt}
                     ],
-                    "temperature": 0.7,
-                    "max_tokens": 2000
+                    "temperature": DEEPSEEK_TEMPERATURE
                 },
                 timeout=DEEPSEEK_TIMEOUT
             )

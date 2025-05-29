@@ -2,10 +2,7 @@ import streamlit as st
 import requests
 from datetime import datetime
 import json
-
-# 配置API地址和超时时间
-API_URL = "http://127.0.0.1:8000"
-API_TIMEOUT = 180  # 设置前端超时时间比后端长一些
+from config import API_URL, API_TIMEOUT, DEBUG
 
 st.set_page_config(
     page_title="生辰八字算命系统",
@@ -33,7 +30,7 @@ def call_api(endpoint: str, data: dict):
     url = f"{API_URL}{endpoint}"
     try:
         # 显示调试信息
-        if st.session_state.get('debug', False):
+        if DEBUG:
             st.write("Debug Info:")
             st.write(f"URL: {url}")
             st.write(f"Request Data: {json.dumps(data, ensure_ascii=False, indent=2)}")
@@ -46,7 +43,7 @@ def call_api(endpoint: str, data: dict):
         )
         
         # 显示调试信息
-        if st.session_state.get('debug', False):
+        if DEBUG:
             st.write(f"Response Status: {response.status_code}")
             st.write(f"Response Headers: {dict(response.headers)}")
             try:

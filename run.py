@@ -1,10 +1,10 @@
 import subprocess
 import sys
 import os
-from dotenv import load_dotenv
 import time
 import requests
 from requests.exceptions import RequestException
+from config import API_HOST, API_PORT, FRONTEND_PORT
 
 def wait_for_api(url: str, max_retries: int = 30, delay: float = 1.0):
     """等待API服务可用"""
@@ -23,8 +23,6 @@ def wait_for_api(url: str, max_retries: int = 30, delay: float = 1.0):
     return False
 
 def main():
-    load_dotenv()
-    
     # 检查是否安装了所需的依赖
     try:
         import fastapi
@@ -38,12 +36,12 @@ def main():
     print("启动后端服务...")
     # 启动后端服务
     backend_process = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "api.main:app", "--reload", "--host", "127.0.0.1", "--port", "8000"],
+        [sys.executable, "-m", "uvicorn", "api.main:app", "--reload", "--host", API_HOST, "--port", str(API_PORT)],
         env=os.environ.copy()
     )
     
     # 等待后端服务启动
-    if not wait_for_api("http://127.0.0.1:8000/docs"):
+    if not wait_for_api(f"http://{API_HOST}:{API_PORT}/docs"):
         print("无法启动后端服务，请检查日志！")
         backend_process.terminate()
         return
@@ -51,7 +49,7 @@ def main():
     print("启动前端服务...")
     # 启动前端服务
     frontend_process = subprocess.Popen(
-        [sys.executable, "-m", "streamlit", "run", "frontend/app.py", "--server.port", "8501", "--server.address", "127.0.0.1"],
+        [sys.executable, "-m", "streamlit", "run", "frontend/app.py", "--server.port", str(FRONTEND_PORT), "--server.address", API_HOST],
         env=os.environ.copy()
     )
     
