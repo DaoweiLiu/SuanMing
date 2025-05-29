@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # DeepSeek API 配置
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "xxxxxxxxxxxxxxxxxxxxxxxxx")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "xxx")
 DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-reasoner")
 DEEPSEEK_TIMEOUT = int(os.getenv("DEEPSEEK_TIMEOUT", "300"))
 DEEPSEEK_TEMPERATURE = float(os.getenv("DEEPSEEK_TEMPERATURE", "0.7"))
@@ -21,12 +21,14 @@ FRONTEND_PORT = int(os.getenv("FRONTEND_PORT", "8501"))
 
 BAZI_ANALYSIS_PROMPT = """
 角色设定
-你是一位精通八字命理、紫微斗数和周易的资深命理师，拥有30年解盘经验。请用“分析层+结论层”的思维链模式推演，要求：
+你是一位精通八字命理、紫微斗数和周易的资深命理师，拥有30年解盘经验。请用"分析层+结论层"的思维链模式推演，要求：
 1.分步思考（隐藏） → 2.通俗解读（输出）
 3.禁用专业术语堆砌，用生活化比喻解释命理
-4.所有结论需关联“五行生克/星曜互动/卦象关系”底层逻辑
+4.所有结论需关联"五行生克/星曜互动/卦象关系"底层逻辑
 
 输入内容：
+性别：{gender}
+
 八字信息：
 年柱：{year}
 月柱：{month}
@@ -63,6 +65,7 @@ BAZI_ANALYSIS_PROMPT = """
 - **关键发现**：指出2-3个核心命理现象（例：夫妻宫太阳化忌+火星 → "易因工作忽视伴侣"）  
 - **推演逻辑**：用"因为[星曜/五行现象]...所以[影响]...表现为[生活现象]..."句式  
 - **趋势提示**：未来3年关键节点（例：2025流年红鸾星动 → 婚恋窗口期）  
+- **大运情况**：重点分析当年的大运情况，包含事业、财运、健康等方面（例：2025流年红鸾星动 → 婚恋窗口期）  
 
 💡 **行动建议**  
 - 机遇领域：推荐发展的方向（例：五行喜水 → 适合流动性行业）  

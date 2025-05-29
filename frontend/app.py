@@ -1,8 +1,9 @@
 import streamlit as st
 import requests
-from datetime import datetime
+from datetime import datetime, time
 import json
 from config import API_URL, API_TIMEOUT, DEBUG
+from frontend.city_data import CITY_DATA
 
 st.set_page_config(
     page_title="生辰八字算命系统",
@@ -89,6 +90,14 @@ def main():
     with col1:
         st.subheader("基本信息")
         
+        # 性别选择
+        gender = st.radio(
+            "选择性别",
+            options=["男", "女"],
+            horizontal=True,
+            help="请选择您的性别"
+        )
+        
         # 历法选择
         is_lunar = st.radio(
             "选择历法",
@@ -105,25 +114,40 @@ def main():
             max_value=datetime.now()
         )
         
-        # 时辰选择
-        hour_options = [
-            (0, "子时 (23:00-01:00)"),
-            (2, "丑时 (01:00-03:00)"),
-            (4, "寅时 (03:00-05:00)"),
-            (6, "卯时 (05:00-07:00)"),
-            (8, "辰时 (07:00-09:00)"),
-            (10, "巳时 (09:00-11:00)"),
-            (12, "午时 (11:00-13:00)"),
-            (14, "未时 (13:00-15:00)"),
-            (16, "申时 (15:00-17:00)"),
-            (18, "酉时 (17:00-19:00)"),
-            (20, "戌时 (19:00-21:00)"),
-            (22, "亥时 (21:00-23:00)")
-        ]
-        selected_hour = st.selectbox(
-            "选择出生时辰",
-            options=[h[0] for h in hour_options],
-            format_func=lambda x: next(h[1] for h in hour_options if h[0] == x)
+        # 时间选择
+        birth_time = st.time_input(
+            "选择出生时间（24小时制）",
+            value=time(12, 0),
+            help="请尽可能准确地输入出生时间，这将影响时柱的计算"
+        )
+        
+        # 出生地点选择
+        st.subheader("出生地点")
+        
+        # 省份选择
+        province = st.selectbox(
+            "选择省份",
+            options=list(CITY_DATA.keys()),
+            help="请选择您的出生地所在省份"
+        )
+        
+        # 城市选择（基于选择的省份）
+        cities = list(CITY_DATA[province].keys())
+        city = st.selectbox(
+            "选择城市",
+            options=cities,
+            help="请选择您的出生地所在城市"
+        )
+        
+        # 获取选中城市的经纬度
+        city_info = CITY_DATA[province][city]
+        latitude = city_info["lat"]
+        longitude = city_info["lon"]
+        
+        # 显示选中地点的信息
+        st.info(
+            f"已选择: {province} {city}\n"
+            f"经度: {longitude}°E, 纬度: {latitude}°N"
         )
         
         # 提交按钮
@@ -134,8 +158,11 @@ def main():
                     "year": birth_date.year,
                     "month": birth_date.month,
                     "day": birth_date.day,
-                    "hour": selected_hour,
-                    "is_lunar": is_lunar
+                    "birth_time": birth_time.strftime("%H:%M"),
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "is_lunar": is_lunar,
+                    "gender": gender
                 }
                 
                 # 调用API
@@ -148,9 +175,9 @@ def main():
                         # 显示日期信息
                         st.write("### 日期信息")
                         date_info = {
-                            "": ["日期"],
-                            "公历": [result["bazi"]["solar_date"]],
-                            "农历": [result["bazi"]["lunar_date"]]
+                            "": ["日期", "当地时间"],
+                            "公历": [result["bazi"]["solar_date"], result["bazi"]["local_time"]],
+                            "农历": [result["bazi"]["lunar_date"], ""]
                         }
                         st.table(date_info)
                         
